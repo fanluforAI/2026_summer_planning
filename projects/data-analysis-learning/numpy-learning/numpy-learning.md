@@ -153,3 +153,41 @@ x = x.reshape(32, 1, 28, 28)             # batch × channel × H × W
 ```
 
 > `-1` = "你自己算"，最省心的参数 💡
+
+### ndarray 属性 — 查数组"户口"
+
+数组创建出来，第一件事就是查属性——确认数据结构对不对。
+
+```python
+img = np.array([[1, 2, 3], [4, 5, 6]])
+```
+
+| 属性 | 示例值 | 说明 |
+|------|--------|------|
+| `.shape` | `(2, 3)` | 形状：2 行 × 3 列 |
+| `.ndim` | `2` | 维度数（几维数组） |
+| `.size` | `6` | 总元素个数 = shape 各维乘积 |
+| `.dtype` | `dtype('int64')` | 元素数据类型 |
+| `.itemsize` | `8` | 每个元素占多少字节 |
+| `.nbytes` | `48` | 数组总共占多少字节 = size × itemsize |
+| `.T` | `shape (3, 2)` | 转置矩阵（行变列，列变行） |
+
+```python
+img.shape          # (2, 3)     ← 查形状
+img.ndim           # 2           ← 几维？2维=矩阵，3维=图像(H,W,C)
+img.size           # 6           ← 总共多少元素
+img.dtype          # int64       ← 什么类型？（uint8 for 图像常见）
+img.itemsize       # 8           ← 一个元素 8 字节
+img.nbytes         # 48          ← 总共占多少内存
+img.T              # [[1,4],[2,5],[3,6]]  ← 转置
+```
+
+**AI/CV 最常用的三个**：
+
+| 属性 | 为什么常说 |
+|------|-----------|
+| `.shape` | "这个 tensor 维度对了吗？" — 排 bug 第一步 |
+| `.dtype` | `float32` vs `float64` — 影响显存和精度 |
+| `.ndim` | 确保 reshape 前后维度数正确 |
+
+> 💡 PyTorch 的 `Tensor` 属性几乎一一对应：`.shape` → `.shape`，`.dtype` → `.dtype`，`.T` → `.T`。
