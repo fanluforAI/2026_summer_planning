@@ -191,3 +191,138 @@ img.T              # [[1,4],[2,5],[3,6]]  ← 转置
 | `.ndim` | 确保 reshape 前后维度数正确 |
 
 > 💡 PyTorch 的 `Tensor` 属性几乎一一对应：`.shape` → `.shape`，`.dtype` → `.dtype`，`.T` → `.T`。
+
+---
+
+## 📦 常用函数速查（按类别）
+
+### 一、创建数组
+
+| 函数 | 作用 | 示例 |
+|------|------|------|
+| `np.array(list)` | 从列表创建 | `np.array([1, 2, 3])` |
+| `np.zeros(shape)` | 全 0 数组 | `np.zeros((2, 3))` |
+| `np.ones(shape)` | 全 1 数组 | `np.ones((2, 3))` |
+| `np.full(shape, val)` | 填充指定值 | `np.full((2, 3), 2026)` |
+| `np.empty(shape)` | 未初始化（内容随机） | `np.empty((2, 3))` |
+| `np.zeros_like(arr)` | 仿形状全 0 | `np.zeros_like(img)` |
+| `np.ones_like(arr)` | 仿形状全 1 | `np.ones_like(label)` |
+| `np.full_like(arr, val)` | 仿形状填充值 | `np.full_like(mask, 255)` |
+| `np.arange(start, stop, step)` | 等差数列（整数步长） | `np.arange(0, 10, 2)` → `[0,2,4,6,8]` |
+| `np.linspace(start, stop, n)` | 等差数列（指定个数） | `np.linspace(0, 1, 5)` → `[0, .25, .5, .75, 1]` |
+| `np.eye(n)` | 单位矩阵 | `np.eye(3)` → 3×3 对角线全 1 |
+| `np.copy(arr)` | 深拷贝（独立副本） | `b = np.copy(a)` |
+
+```python
+# arange vs linspace
+np.arange(0, 1, 0.25)       # [0.   0.25 0.5  0.75] — 给步长
+np.linspace(0, 1, 5)        # [0.   0.25 0.5  0.75 1.  ] — 给个数
+
+# like 系列 — 保持原数组 shape 不变，换内容
+np.zeros_like(img)           # 创建跟图像同形状的纯黑画布
+np.ones_like(mask) * 255     # 创建跟 mask 同形状的纯白填充
+```
+
+### 二、随机数
+
+| 函数 | 作用 | 示例 |
+|------|------|------|
+| `np.random.seed(n)` | 固定随机种子（可复现） | `np.random.seed(42)` |
+| `np.random.randn(d0, d1, ...)` | 标准正态分布 | `np.random.randn(32, 100)` |
+| `np.random.randint(low, high, size)` | 随机整数 | `np.random.randint(0, 256, (224, 224, 3))` |
+| `np.random.rand(d0, d1, ...)` | [0,1) 均匀分布 | `np.random.rand(3, 3)` |
+| `np.random.shuffle(arr)` | 就地打乱数组 | 洗数据用 |
+
+```python
+np.random.seed(42)                     # 🔥 第一行就写，保证每次结果一样
+z = np.random.randn(32, 100)           # 生成潜变量噪声（GAN / VAE）
+idx = np.random.permutation(1000)      # 随机打乱索引 → 用于 batch 采样
+```
+
+### 三、统计与聚合
+
+| 函数 | 作用 | AI/CV 场景 |
+|------|------|-----------|
+| `np.sum(arr, axis=?)` | 求和 | 算 L1/L2 正则项 |
+| `np.mean(arr, axis=?)` | 均值 | 数据集归一化：`(X - mean) / std` |
+| `np.std(arr, axis=?)` | 标准差 | 同上 |
+| `np.var(arr, axis=?)` | 方差 | 判断 feature map 是否崩了 |
+| `np.max(arr)` / `np.min(arr)` | 最大/最小值 | 看像素值范围 |
+| `np.argmax(arr, axis=?)` | 最大值的索引 | 分类器输出 → 预测类别 🔥 |
+| `np.argmin(arr, axis=?)` | 最小值的索引 | — |
+| `np.median(arr)` | 中位数 | 离群值分析 |
+
+```python
+# axis 方向直觉（CV 里最常用）
+X = np.random.randn(100, 784)           # 100 个样本，每样本 784 维
+
+X.mean(axis=0)      # shape (784,) — 每个特征的均值（对样本求平均）
+X.mean(axis=1)      # shape (100,) — 每个样本的均值
+
+# 图像归一化
+mean = X_train.mean(axis=0)             # 训练集每通道的均值
+std  = X_train.std(axis=0)
+X_norm = (X - mean) / std               # 标准化到 ~N(0,1)
+```
+
+### 四、数学运算
+
+| 函数 | 作用 | 说明 |
+|------|------|------|
+| `np.add(a, b)` / `a + b` | 逐元素加 | |
+| `np.subtract(a, b)` / `a - b` | 逐元素减 | |
+| `np.multiply(a, b)` / `a * b` | 逐元素乘 | |
+| `np.divide(a, b)` / `a / b` | 逐元素除 | |
+| `np.dot(a, b)` / `a @ b` | 矩阵乘法 | 全连接层的本质 🔥 |
+| `np.sqrt(arr)` | 开方 | |
+| `np.exp(arr)` | e^x | Softmax 里用到 |
+| `np.log(arr)` | ln(x) | Cross-Entropy Loss |
+| `np.abs(arr)` | 绝对值 | L1 Loss |
+| `np.clip(arr, min, max)` | 截断到区间 | 梯度裁剪，防止数值爆炸 |
+| `np.power(arr, n)` / `arr ** n` | 幂次 | L2 Loss: `(pred - gt) ** 2` |
+
+```python
+# 向量化 vs 循环
+for i in range(10000):                  # Python 循环 — 慢
+    c[i] = a[i] + b[i]
+
+c = a + b                               # NumPy 向量化 — 快 100 倍 🚀
+```
+
+### 五、数组操作
+
+| 函数 | 作用 | 典型场景 |
+|------|------|---------|
+| `np.concatenate([a, b], axis=0)` | 沿轴拼接 | 纵向堆样本 |
+| `np.stack([a, b], axis=0)` | 新轴堆叠 | 把多个图叠成 batch |
+| `np.vstack([a, b])` | 垂直堆叠 | = `concatenate(axis=0)` |
+| `np.hstack([a, b])` | 水平堆叠 | = `concatenate(axis=1)` |
+| `np.expand_dims(arr, axis=0)` | 增加一个维度 | `(H,W)` → `(1,H,W)` 加 batch 维 |
+| `np.squeeze(arr)` | 删除大小为 1 的维度 | `(1,28,28)` → `(28,28)` |
+| `np.transpose(arr, axes)` | 换轴 | `(H,W,C)` → `(C,H,W)` PyTorch 格式 |
+| `np.flip(arr, axis=?)` | 沿轴翻转 | `np.flip(img, 1)` = 水平翻转（数据增强） |
+| `np.unique(arr)` | 去重 + 排序 | 看 label 有哪些值 |
+| `np.where(cond, x, y)` | 条件筛选替换 | 语义分割上色 |
+
+```python
+# CV 三件套
+img_cwh = np.transpose(img_hwc, (2, 0, 1))   # HWC → CHW（PyTorch 要的格式）
+img_batch = np.expand_dims(img, axis=0)       # (H,W,3) → (1,H,W,3) 加 batch 维
+img_flip = np.flip(img, axis=1)               # 水平翻转做数据增强
+```
+
+> `expand_dims` + `squeeze` 是一对：一个加维度一个减维度，处理模型输入输出时天天用。
+
+### 六、线性代数
+
+| 函数 | 作用 | 场景 |
+|------|------|------|
+| `np.linalg.norm(arr, ord=2)` | 范数（L2 默认） | 正则化、特征距离 |
+| `np.linalg.inv(A)` | 矩阵求逆 | 最小二乘 |
+| `np.linalg.svd(A)` | SVD 分解 | 本质矩阵/基础矩阵 |
+| `np.linalg.eig(A)` | 特征值/特征向量 | PCA |
+
+```python
+U, S, Vt = np.linalg.svd(E)            # SVD → 三维重建核心操作
+w, v = np.linalg.eig(C)                # 特征分解 → PCA 降维
+```
